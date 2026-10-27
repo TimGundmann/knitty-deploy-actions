@@ -1,0 +1,65 @@
+name: Transfer files with retry
+description: Transfer deployment files with up to three attempts and 30 seconds between attempts.
+inputs:
+  host:
+    description: SSH server hostname
+    required: true
+  username:
+    description: SSH username
+    required: true
+  key:
+    description: SSH private key supplied by the calling repository
+    required: true
+  source:
+    description: Comma-separated local files or directories to transfer
+    required: true
+  target:
+    description: Remote destination directory
+    required: true
+  strip_components:
+    description: Number of leading path components to remove when extracting
+    default: '0'
+runs:
+  using: composite
+  steps:
+    - name: Transfer files (attempt 1 of 3)
+      id: transfer_1
+      continue-on-error: true
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        source: ${{ inputs.source }}
+        target: ${{ inputs.target }}
+        strip_components: ${{ inputs.strip_components }}
+    - name: Wait before second attempt
+      if: steps.transfer_1.outcome == 'failure'
+      shell: bash
+      run: sleep 30
+    - name: Transfer files (attempt 2 of 3)
+      id: transfer_2
+      if: steps.transfer_1.outcome == 'failure'
+      continue-on-error: true
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        source: ${{ inputs.source }}
+        target: ${{ inputs.target }}
+        strip_components: ${{ inputs.strip_components }}
+    - name: Wait before final attempt
+      if: steps.transfer_2.outcome == 'failure'
+      shell: bash
+      run: sleep 30
+    - name: Transfer files (attempt 3 of 3)
+      if: steps.transfer_2.outcome == 'failure'
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        source: ${{ inputs.source }}
+        target: ${{ inputs.target }}
+        strip_components: ${{ inputs.strip_components }}
