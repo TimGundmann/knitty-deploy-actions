@@ -11,18 +11,18 @@ commands are not repeated. A transfer can overwrite files already extracted by a
 partially completed attempt; frontend transfers retain their existing in-place
 deployment behavior.
 
-## Publish before updating consumers
+## Rollout
 
-1. Create the public GitHub repository `TimGundmann/knitty-deploy-actions`, with
-   `main` as its default branch, and publish this directory there first.
-   The repository contains deployment logic only; never commit credentials.
-   Public visibility is needed because the public `config-service` repository
-   also uses this action.
-2. Confirm that `scp-with-retry/action.yml` is available on `main` before pushing
-   any of the consumer workflow changes. Otherwise GitHub cannot resolve it.
-3. Push the prepared workflow changes in `bff`, `newsletter-service`,
-   `pattern-service`, `user-service`, `config-service`, `frontend`, `knottynetwork`
-   and `knottynetwork-frontend`.
+The action is published from `TimGundmann/knitty-deploy-actions` on `main`.
+The repository contains deployment logic only; never commit credentials.
+Public visibility is needed because the public `config-service` repository
+also uses this action.
+
+Merge the consumer workflow pull requests in `bff`, `newsletter-service`,
+`pattern-service`, `user-service`, `config-service`, `frontend`, `knottynetwork`
+and `knottynetwork-frontend` to enable retries. Their existing push-to-default-branch
+triggers then run their deployment workflows. Publishing this action alone does
+not change any running service.
 
 Each consumer passes its existing SSH secrets, source and destination:
 
